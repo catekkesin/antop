@@ -1,0 +1,17 @@
+{
+  "name": "atop",
+  "version": "1.0.0",
+  "description": "simple system monitor tool",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon index.js"
+  },
+  "author": "arda tekkesin",
+  "license": "MIT",
+  "dependencies": {
+    "cpu-stats": "^1.0.0",
+    "multi-progress-bars": "^5.0.3",
+    "nodemon": "^2.0.22"
+  }
+}
