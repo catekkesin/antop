@@ -1,8 +1,10 @@
+#!/usr/bin/env node
+
 import { MultiProgressBars } from "multi-progress-bars";
 import * as chalk from "chalk";
 import os from "os";
 import cpuStats from "cpu-stats";
-import { read } from "fs";
+import { exec } from "child_process";
 
 const readCPU = () => {
   return new Promise((resolve, reject) => {
@@ -24,7 +26,7 @@ const readMem = () => {
 
 // Initialize mpb
 const mpb = new MultiProgressBars({
-  initMessage: " ATOP :) ",
+  initMessage: " antop :) ",
   anchor: "top",
   persist: true,
   border: true,
@@ -40,7 +42,7 @@ mpb.addTask("RAM", {
 
 // TASKS end
 
-const createCPUTasks = () => {
+const createCPULoadTasks = () => {
   const coreCount = os.cpus().length; // Get the number of CPU cores
 
   for (let i = 0; i < coreCount; i++) {
@@ -52,7 +54,9 @@ const createCPUTasks = () => {
   }
 };
 
-const updateCPUTasks = (cpuData) => {
+const updateCPULoadTasks = async () => {
+  const cpuData = await readCPU();
+
   for (let i = 0; i < cpuData.length; i++) {
     console.log();
 
@@ -60,14 +64,12 @@ const updateCPUTasks = (cpuData) => {
   }
 };
 
-createCPUTasks();
+const checkCPUTemperature = () => {};
 
-// Update tasks
-// mpb.incrementTask("Webpack Backend", { percentage: 0.1 });
+createCPULoadTasks();
 
 setInterval(async () => {
-  const cpuData = await readCPU();
-  updateCPUTasks(cpuData);
+  updateCPULoadTasks();
 
   mpb.updateTask("RAM", { percentage: readMem() });
 }, 500);

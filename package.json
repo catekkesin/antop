@@ -1,9 +1,10 @@
 {
-  "name": "atop",
+  "name": "antop",
   "version": "1.0.0",
   "description": "simple system monitor tool",
   "main": "index.js",
   "type": "module",
+  "preferGlobal": true,
   "scripts": {
     "start": "nodemon index.js"
   },
