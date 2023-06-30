@@ -1,35 +1,60 @@
 import { MultiProgressBars } from "multi-progress-bars";
-import * as chalk from "chalk";
+import chalk from "chalk";
 import os from "os";
 import cpuStats from "cpu-stats";
 import { spawn } from "child_process";
+import fs from "fs";
+import path from "path";
+
+const getVersion = async () => {
+  const rawData = await fs.promises.readFile(path.join("package.json"));
+  const packageInfo = JSON.parse(rawData);
+  return packageInfo.version;
+};
+
+const readCPU = () => {
+  return new Promise((resolve, reject) => {
+    cpuStats(1000, function (error, result) {
+      if (error) return reject(error);
+
+      resolve(result);
+    });
+  });
+};
+
+const readMem = () => {
+  const totalMemory = os.totalmem();
+  const freeMemory = os.freemem();
+  const usedMemory = totalMemory - freeMemory;
+
+  return {
+    percentage: usedMemory / totalMemory,
+    totalMemory: (totalMemory / (1024 * 1024 * 1024)).toFixed(2),
+    usedMemory: (usedMemory / (1024 * 1024 * 1024)).toFixed(2),
+  };
+};
+
+const setBarColor = (percentage) => {
+  let color = chalk.green;
+  switch (true) {
+    case percentage < 0.35:
+      color = chalk.green;
+      break;
+    case percentage < 0.8:
+      color = chalk.yellowBright;
+      break;
+    case percentage >= 0.8:
+      color = chalk.red;
+      break;
+    default:
+  }
+  return color;
+};
 
 export async function run() {
-  const readCPU = () => {
-    return new Promise((resolve, reject) => {
-      cpuStats(1000, function (error, result) {
-        if (error) return reject(error);
-
-        resolve(result);
-      });
-    });
-  };
-
-  const readMem = () => {
-    const totalMemory = os.totalmem();
-    const freeMemory = os.freemem();
-    const usedMemory = totalMemory - freeMemory;
-
-    return {
-      percentage: usedMemory / totalMemory,
-      totalMemory: (totalMemory / (1024 * 1024 * 1024)).toFixed(2),
-      usedMemory: (usedMemory / (1024 * 1024 * 1024)).toFixed(2),
-    };
-  };
-
   // Initialize mpb
   const mpb = new MultiProgressBars({
-    initMessage: ` antop :) ver. ${process.env.npm_package_version} `,
+    initMessage: ` antop :) ver. ${await getVersion()} `,
     anchor: "top",
     persist: true,
     border: true,
@@ -42,8 +67,8 @@ export async function run() {
     for (let i = 0; i < coreCount; i++) {
       mpb.addTask(`Core${i}`, {
         type: "percentage",
-        barTransformFn: chalk.red,
-        nameTransformFn: chalk.bold,
+        // barTransformFn: chalk.red,
+        // nameTransformFn: chalk.bold,
       });
     }
   };
@@ -51,8 +76,8 @@ export async function run() {
   const createRAMLoadTask = () => {
     mpb.addTask("RAM", {
       type: "percentage",
-      barTransformFn: chalk.green,
-      nameTransformFn: chalk.bold,
+      // barTransformFn: chalk.green,
+      nameTransformFn: chalk.green,
     });
   };
   // create task end
@@ -62,10 +87,11 @@ export async function run() {
     const cpuData = await readCPU();
 
     for (let i = 0; i < cpuData.length; i++) {
-      console.log();
+      const corePercentage = (cpuData[i].cpu / 100).toFixed(2);
 
       mpb.updateTask(`Core${i}`, {
-        percentage: cpuData[i].cpu / 100,
+        percentage: corePercentage,
+        barTransformFn: setBarColor(corePercentage),
       });
     }
   };
@@ -76,6 +102,7 @@ export async function run() {
     mpb.updateTask("RAM", {
       percentage: memInfo.percentage,
       message: `${memInfo.usedMemory} / ${memInfo.totalMemory} G`,
+      barTransformFn: setBarColor(memInfo.percentage),
     });
   };
   // update task end
