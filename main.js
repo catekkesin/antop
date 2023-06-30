@@ -7,7 +7,7 @@ import fs from "fs";
 import path from "path";
 
 const getVersion = async () => {
-  const rawData = await fs.promises.readFile(path.join("package.json"));
+  const rawData = await fs.promises.readFile(path.join("./package.json"));
   const packageInfo = JSON.parse(rawData);
   return packageInfo.version;
 };
